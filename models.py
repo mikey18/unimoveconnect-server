@@ -13,7 +13,7 @@ class User(Base):
     password = Column(String)
     wallet = Column(Integer)
     rides = relationship("Ride", back_populates="user")
-    messages = relationship("Message", back_populates="user")  # Add this line
+    messages = relationship("Message", back_populates="user")
 
 class Driver(Base):
     __tablename__ = "driver"
@@ -25,13 +25,13 @@ class Driver(Base):
     password = Column(String)
     platenumber = Column(String)
     rides = relationship("Ride", back_populates="driver")
-    messages = relationship("Message", back_populates="driver")  # Add this line
+    messages = relationship("Message", back_populates="driver")
 
 class Ride(Base):
     __tablename__ = "ride"
 
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=func.now())  # DateTime field for indicating ride creation time
+    created_at = Column(DateTime, default=func.now())
     from_location = Column(String)
     to_location = Column(String)
     price = Column(Integer)
@@ -39,13 +39,11 @@ class Ride(Base):
     clas = Column(String)
     seat = Column(Integer)
     bag = Column(Integer)
-    user_id = Column(Integer, ForeignKey('user.id'))  # Foreign key for User table
-    driver_id = Column(Integer, ForeignKey('driver.id'), nullable=True)  # Foreign key for Driver table (optional)
-    # driver_name = Column(String)
-    # driver_plate = Column(String)
-    # driver_rank = Column(Integer)
-    cancelled = Column(Boolean, default=False)  # Boolean field for indicating ride cancellation
-    completed = Column(Boolean, default=False)  # Boolean field for indicating ride completion
+    user_id = Column(Integer, ForeignKey('user.id'))
+    driver_id = Column(Integer, ForeignKey('driver.id'), nullable=True)
+    mobility_constrained = Column(Boolean, default=False)
+    cancelled = Column(Boolean, default=False)
+    completed = Column(Boolean, default=False)
     user = relationship("User", back_populates="rides")
     driver = relationship("Driver", back_populates="rides")
 
@@ -53,8 +51,8 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)  # Foreign key for User table
-    driver_id = Column(Integer, ForeignKey('driver.id'), nullable=True)  # Foreign key for Driver table (optional)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    driver_id = Column(Integer, ForeignKey('driver.id'), nullable=True) 
     user = relationship("User", back_populates="messages")
     driver = relationship("Driver", back_populates="messages")
     message = Column(String)

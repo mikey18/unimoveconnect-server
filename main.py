@@ -50,7 +50,7 @@ class Get_User(BaseModel):
     firstname: str
     lastname: str
     matric_no: str
-    wallet: Optional[int]  # Allow wallet to be nullable (None)
+    wallet: Optional[int]
     email: str
     type: str
 
@@ -66,6 +66,7 @@ class Request_Ride(BaseModel):
     clas: str
     seat: int
     bag: int
+    mobility_constrained: bool
 
 class Message(BaseModel):
     message: str
@@ -241,25 +242,6 @@ def initiate_ride(user_id: int, db: Session = Depends(get_db)):
         "data": data
     }
 
-# @app.get("/get_price_and_driver")
-# def get_price_and_driver(range: str):
-#     range_without_commas = range.replace(',', '')
-#     lower, upper = map(int, range_without_commas.split(" - "))
-#     random_number = random.randint(lower, upper)
-
-#     return {
-#         "status": 200,
-#         "data": {
-#             "driver": {
-#                 "name": fake.name(),
-#                 "platenumber": fake.license_plate(),
-#                 "rating": fake.random_int(min=1, max=5),
-#             },
-#             "price": random_number
-#         }
-#     }
-    
-
 @app.post("/request_ride")
 def request_ride(data: Request_Ride, user_id: int, db: Session = Depends(get_db)):
     ride_exists2 = db.query(models.Ride).filter(
@@ -284,9 +266,7 @@ def request_ride(data: Request_Ride, user_id: int, db: Session = Depends(get_db)
     ride_model.clas = data.clas
     ride_model.seat = data.seat
     ride_model.bag = data.bag
-    # ride_model.driver_name = data.driver_name
-    # ride_model.driver_plate = data.driver_plate
-    # ride_model.driver_rank = data.driver_rank
+    ride_model.mobility_constrained = data.mobility_constrained
     db.add(ride_model)
     db.commit()
 
@@ -316,9 +296,6 @@ def poll_ride(user_id: int, db: Session = Depends(get_db)):
         }
     else:
         user_model = db.query(models.User).filter(models.User.id == user_id).first()
-        # user_model.wallet -= data.price
-        # db.add(user_model)
-        # db.commit()
         user_data = Get_User(
             id=user_model.id,
             firstname=user_model.firstname,
@@ -356,7 +333,8 @@ def fetch_rides(user_id: int, db: Session = Depends(get_db)):
             "seat": ongoing.seat,
             "bag": ongoing.bag,
             "class": ongoing.clas,
-            "driver": driver
+            "mobility_constrained": ongoing.mobility_constrained,
+            "driver": driver,
         }
     else:
         ongoing_data = None
@@ -528,7 +506,7 @@ def fetch_rides(driver_id: int, db: Session = Depends(get_db)):
         user_data = {
             "firstname": ride.user.firstname,
             "lastname": ride.user.lastname,
-            "matric_no": ride.user.matric_no
+            "matric_no": ride.user.matric_no,
         }
         ride_data = {
             "id": ride.id,
@@ -539,6 +517,7 @@ def fetch_rides(driver_id: int, db: Session = Depends(get_db)):
             "date": ride.date,
             "bag": ride.bag,
             "seat": ride.seat,
+            "mobility_constrained": ride.mobility_constrained,
         }
         return {
             "status": 201,
@@ -560,6 +539,7 @@ def fetch_rides(driver_id: int, db: Session = Depends(get_db)):
                 "firstname": ride.user.firstname,
                 "lastname": ride.user.lastname,
                 "matric_no": ride.user.matric_no,
+                "mobility_constrained": ride.mobility_constrained,
             }
             prev.append(ride_data)    
         return {
@@ -591,6 +571,7 @@ def accept_ride(ride_id: int, driver_id: int, db: Session = Depends(get_db)):
             "date": ride.date,
             "bag": ride.bag,
             "seat": ride.seat,
+            "mobility_constrained": ride.mobility_constrained,
         }
         return {
             "status": 200,
@@ -634,34 +615,6 @@ def post_message(driver_id: int, data: Message, db: Session = Depends(get_db)):
     return {
         "status": 200,
     }
-
-# @app.post("/completed_cancel_ride_driver")
-# def completed_ride(driver_id: int, action: str, db: Session = Depends(get_db)):
-#     ride = db.query(models.Ride).filter(models.Ride.driver_id == driver_id,
-#                                         models.Ride.completed == False,
-#                                         models.Ride.cancelled == False).first()
-#     if ride:
-#         if action == "completed":
-#             ride.completed = True
-#             db.commit()
-#             return {
-#                 "status": 200,
-#                 "message": "Driver completed ride"
-#             }
-#         else:
-#             ride.cancelled = True
-#             db.commit()
-#             return {
-#                 "status": 200,
-#                 "message": "Driver cancelled ride"
-#             }
-#     else:
-#         return {
-#             "status": 400,
-#             "message": "Failed"
-#         }
-
-
 
 
 
